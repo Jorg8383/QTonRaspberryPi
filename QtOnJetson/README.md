@@ -1,5 +1,5 @@
-# Cross compilation of Qt6.8.1 Jetson Orin/Nx/Nano with Docker(Base and QML packages) and Remote Debugging with Vscode
-In this content, you will find a way to cross-compile Qt 6.8.1 for Jetson Orin/Nx/Nano(ubuntu os) hardware using Docker isolation.
+# Cross compilation of Qt6.10.1 Jetson Orin/Nx/Nano with Docker(Base and QML packages) and Remote Debugging with Vscode
+In this content, you will find a way to cross-compile Qt 6.10.1 for Jetson Orin/Nx/Nano(ubuntu os) hardware using Docker isolation.
 This is a complete tutorial that you can learn how to debug the application with vscode.
 
 The primary advantage of Docker is its ability to isolate the build environment. This means you can build Qt without needing a Jetson Development Boards (real hardware) and regardless of your host OS type, as long as you can run Docker (along with QEMU). Additionally, you won’t need to handle dependencies anymore (and I’m not kidding). This approach is easier and less painful.
@@ -18,7 +18,7 @@ For remote debugging and follow up [click](https://www.youtube.com/watch?v=RWNWA
 
 I tested this on Ubuntu 22 and 20(as host). Regardless of the version, Qt is successfully cross-compiled and builds a 'Hello World' application (with QML) for Jetson Orin/Nx/Nano.
 
-The steps will show you how to prepare your build environment (in this case, Ubuntu) and run the Docker commands to build Qt 6.8.1. But as I mentioned, you don't need to use Ubuntu; as long as you can run the Docker engine and QEMU, you should achieve the same result on any platform.
+The steps will show you how to prepare your build environment (in this case, Ubuntu) and run the Docker commands to build Qt 6.10.1. But as I mentioned, you don't need to use Ubuntu; as long as you can run the Docker engine and QEMU, you should achieve the same result on any platform.
 
 If you want to check with virtual machine you can find tutorial [Here](https://github.com/PhysicsX/QTonRaspberryPi/tree/main/QtRaspberryPi6.6.1). Steps are quite same, for this case you need raspberry pi. It is classical way that you can find in this repository. Or If you want more infromation, check old videos about it.
 If you want to understand theory for cross complation of Qt for rasppberry pi without Docker in detail, you can watch this [video](https://www.youtube.com/watch?v=oWpomXg9yj0?t=0s) which shows how to compile Qt 6.3.0 for raspberry pi(only toolchain is not compiled).
@@ -115,7 +115,7 @@ Verify Buildx installation
 $ docker buildx ls
 ```
 
-# Compile Qt 6.8.1 with Docker
+# Compile Qt 6.10.1 with Docker
 
 When I experimented with this idea, I expected to create a single Dockerfile with different stages, allowing me to switch between them even if they involved different hardware architectures. However, it didn't work as expected, so I ended up creating two separate Dockerfiles.
 
@@ -126,33 +126,48 @@ You can find a table which shows the paremeters to be passed to dockerfile accor
 
 The table below provides details on the compatibility of GCC, Ubuntu, JetPack, CUDA, and Jetson board types:
 
-| **GCC Version** | **Ubuntu Version** | **JetPack Version**      | **CUDA Version** | **BOARD_TYPE**  | **Use Case / Notes**                                                                                         |
-|------------------|--------------------|---------------------------|-------------------|------------------|-------------------------------------------------------------------------------------------------------------|
-| 7                | 18.04             | r32.x (e.g., r32.7.3)     | 10-2             | t210, t186       | Used for JetPack 4.x on Nano (t210) and TX2 (t186). Works with CUDA 10.2 and older.                         |
-| 9                | 20.04             | r35.1, r35.2              | 11-4             | t194, t210       | Default for JetPack 5.x with Xavier NX (t194) or Nano (JetPack 5.x experimental).                           |
-| 10               | 20.04             | r35.2                     | 11-6             | t194             | Optional for advanced builds on JetPack 5.x when GCC 10-specific features are required.                    |
-| 11               | 22.04             | r35.3+                    | 11-8             | t234             | Default for JetPack 5.x on Orin (t234) or future boards. Required for CUDA 11.8.                            |
+| Jetson Platform | Ubuntu Version | JetPack Version | Board Type | L4T Version |
+|-----------------|----------------|-----------------|------------|-------------|
+| **JetPack 6.x (Latest)** |
+| Orin Nano       | 22.04          | r36.3           | t234       | 36.3.0      |
+| Orin NX         | 22.04          | r36.3           | t234       | 36.3.0      |
+| AGX Orin        | 22.04          | r36.3           | t234       | 36.3.0      |
+| **JetPack 5.x** |
+| Xavier NX       | 20.04          | r35.4.1         | t194       | 35.4.1      |
+| AGX Xavier      | 20.04          | r35.4.1         | t194       | 35.4.1      |
+| TX2             | 20.04          | r35.4.1         | t186       | 35.4.1      |
+| **JetPack 4.x (Legacy)** |
+| Nano            | 18.04          | r32.7.4         | t210       | 32.7.4      |
+| TX1             | 18.04          | r32.7.4         | t210       | 32.7.4      |
 
----
+## Build Examples
+
+**For JetPack 6 (Orin devices):**
+```bash
+docker buildx build --platform linux/arm64 \
+  --build-arg UBUNTU_VERSION=22.04 \
+  --build-arg JETPACK_VERSION=r36.3 \
+  --build-arg BOARD_TYPE=t234 \
+  -t jetson-sysroot:jp6 .
+```
+
+**For JetPack 5 (Xavier devices):**
+```bash
+docker buildx build --platform linux/arm64 \
+  --build-arg UBUNTU_VERSION=20.04 \
+  --build-arg JETPACK_VERSION=r35.4.1 \
+  --build-arg BOARD_TYPE=t194 \
+  -t jetson-sysroot:jp5 .
+```
 * note: Old gcc versions can cause conflicts with Qt6.x.x
  
-### Notes on JetPack Versions
-
-- **JetPack 4.x**: Use `r32.x` (latest: `r32.7.3`) for legacy systems based on **Ubuntu 18.04** with GCC 7.
-  - `r32.7.x` is the final release for JetPack 4.x and supports Nano (t210) and TX2 (t186).
-- **JetPack 5.x**: Use `r35.x` (e.g., `r35.1`, `r35.2`, or later) for modern systems based on **Ubuntu 20.04+** with GCC 9 or higher.
-  - Recommended for Xavier NX (t194) and Orin (t234).
-- **CUDA Compatibility**:
-  - **r32.x**: CUDA 10.x.
-  - **r35.x**: CUDA 11.x.
-
 
 First, we will create a ubuntu  20/22 environment and emulate it. Then, we need to copy the relevant headers and libraries for later compilation
 
 Run the command to create ubuntu image. This command is for Nx. But if you change the version numbers according to table then you 
 can build the qt for other boards.
 ```bash
-$ docker buildx build --platform linux/arm64 --load -f DockerFileJetson --build-arg UBUNTU_VERSION=20.04 --build-arg CUDA_VERSION=11-4 --build-arg UVUNTU_VERSION_SHORT=2004 --build-arg JETPACK_VERSION=r35.2 --build-arg BOARD_TYPE=t194 -t jetsonimage .
+$ docker buildx build --no-cache --platform linux/arm64 --load   -f DockerFileJetson   --build-arg UBUNTU_VERSION=22.04   --build-arg JETPACK_VERSION=r36.3   --build-arg BOARD_TYPE=t234   --build-arg L4T_VERSION=36.3.0   -t jetsonimage .
 ```
 When it finishes, you will find a file named 'jetsonSysroot.tar.gz' in the '/' directory within the image.
 Let's copy it to the same location where the Dockerfile exists. 
@@ -164,11 +179,11 @@ $ docker cp temp-arm:/jetsonSysroot.tar.gz ./jetsonSysroot.tar.gz
 ```
 This jetsonSysroot.tar.gz file will be copied by the another image that is why location of the tar file is important. You do not need to extract it. Do not touch it.
 
-Now it is time to create ubuntu 22 image and compile the Qt 6.8.1.
+Now it is time to create ubuntu 22 image and compile the Qt 6.10.1.
 In one of the previous commands you used DockerFileNx, this file is written for Jetson boards, now we are going to use only Dockerfile which is default name that means we do not need to specify path or name explicitly. But if  you want you can change the name, you already now how you can pass the file name (with -f)
 
 ```bash
-$ docker build --build-arg UBUNTU_VERSION=20.04 --build-arg GCC_VERSION=9 -t qtcrossjet .
+$ docker build --build-arg UBUNTU_VERSION=22.04 --build-arg GCC_VERSION=11 -t qtcrossjet .
 ```
 
 As you see there is no buildx in this command because buildx uses qemu and we do not need qemu for x86 ubuntu. After some time, (I tested with 16GB RAM and it took around couple of hours) you see that image will be created without an error. After this, you can find HelloQt6 binary which is ready to run on Jetson board, in the /project directory in the image. So lets copy it. As we did before, you need to create temporary container to copy it.

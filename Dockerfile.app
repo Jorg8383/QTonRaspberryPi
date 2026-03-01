@@ -1,15 +1,7 @@
 FROM qtcrossbuild:latest
 
-# Update the repoPath according to yours
-ARG projectDir=project
-ARG repoPath=/home/ulas/QTonRaspberryPi/
+WORKDIR /build/project
 
-RUN rm -rf $repoPath$projectDir
+COPY project/ /build/project/
 
-RUN mkdir -p $repoPath$projectDir
-
-COPY $projectDir $repoPath$projectDir
-
-RUN cd $repoPath$projectDir && \
-    /build/qt6/pi/bin/qt-cmake . -DCMAKE_BUILD_TYPE=Debug && \
-    cmake --build .
+RUN /build/qt6/pi/bin/qt-cmake . -DCMAKE_BUILD_TYPE=Release && cmake --build .

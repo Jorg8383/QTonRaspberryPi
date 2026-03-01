@@ -4,7 +4,7 @@ FROM debian:trixie
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG BUILD_OPENCV=FALSE
+ARG BUILD_OPENCV=OFF
 
 # Update and install necessary packages
 RUN { \
@@ -102,13 +102,12 @@ RUN tar xvfz /build/rasp.tar.gz -C /build/sysroot
 # Copy the toolchain file
 COPY opencvToolchain.cmake /build/
 
+# Fix symbolic links
+COPY sysroot-relativelinks.py /build/sysroot-relativelinks.py
 RUN set -e && \
     echo "Fix symbolic link" && \
-    wget https://raw.githubusercontent.com/riscv/riscv-poky/master/scripts/sysroot-relativelinks.py && \
-    chmod +x sysroot-relativelinks.py && \
-    python3 sysroot-relativelinks.py /build/sysroot 2>&1 | tee -a /build.log
-
-ARG BUILD_OPENCV
+    chmod +x /build/sysroot-relativelinks.py && \
+    python3 /build/sysroot-relativelinks.py /build/sysroot 2>&1 | tee -a /build.log
 
 # Build Opencv
 RUN if [ "$BUILD_OPENCV" = "ON" ]; then \
@@ -238,7 +237,6 @@ RUN { \
 RUN mkdir /build/QtOpencvExample
 COPY QtOpencvExample /build/QtOpencvExample
 
-ARG BUILD_OPENCV
 # Build the project using Qt and Opencv for Raspberry Pi
 RUN if [ "$BUILD_OPENCV" = "ON" ]; then { \
     cd /build/QtOpencvExample && \

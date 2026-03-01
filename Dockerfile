@@ -97,7 +97,7 @@ RUN mkdir sysroot sysroot/usr sysroot/opt
 
 # Copy Raspberry Pi sysroot tarball (if available)
 COPY rasp.tar.gz /build/rasp.tar.gz
-RUN tar xvfz /build/rasp.tar.gz -C /build/sysroot
+RUN tar -xzf /build/rasp.tar.gz -C /build/sysroot && rm -f /build/rasp.tar.gz
 
 # Copy the toolchain file
 COPY opencvToolchain.cmake /build/

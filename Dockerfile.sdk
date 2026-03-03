@@ -100,7 +100,7 @@ COPY rasp.tar.gz /build/rasp.tar.gz
 RUN tar -xzf /build/rasp.tar.gz -C /build/sysroot && rm -f /build/rasp.tar.gz
 
 # Copy the toolchain file
-COPY opencvToolchain.cmake /build/
+COPY opencvtoolchain.cmake /build/
 
 # Fix symbolic links
 COPY sysroot-relativelinks.py /build/sysroot-relativelinks.py
@@ -122,7 +122,7 @@ RUN if [ "$BUILD_OPENCV" = "ON" ]; then \
         -G "Unix Makefiles" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=/build/opencvBuild \
-        -DCMAKE_TOOLCHAIN_FILE=/build/opencvToolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=/build/opencvtoolchain.cmake \
         -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
         -DCMAKE_C_FLAGS="-march=armv8-a -mtune=cortex-a53 -O2 --sysroot=/build/sysroot" \
         -DCMAKE_CXX_FLAGS="-march=armv8-a -mtune=cortex-a53 -O2 --sysroot=/build/sysroot" \

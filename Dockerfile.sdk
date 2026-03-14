@@ -1,6 +1,9 @@
 # Use Debian 13 (trixie) as the base image
 FROM debian:trixie
 
+# Use bash and enable pipefail so piped commands (e.g. with tee logging) fail the build correctly
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -177,17 +180,17 @@ RUN { \
         -DQT_BUILD_EXAMPLES=OFF \
         -DQT_BUILD_TESTS=OFF \
         -DCMAKE_INSTALL_PREFIX=/build/qt6/host && \
-    cmake --build . --parallel 4 && \
+    cmake --build . --parallel $(nproc) && \
     cmake --install . && \
     echo "Compile shader for host" && \
     cd ../qtshadertools-everywhere-src-6.10.1 && \
     /build/qt6/host/bin/qt-configure-module . && \
-    cmake --build . --parallel 4 && \
+    cmake --build . --parallel $(nproc) && \
     cmake --install . && \
     echo "Compile declerative for host" && \
     cd ../qtdeclarative-everywhere-src-6.10.1 && \
     /build/qt6/host/bin/qt-configure-module . && \
-    cmake --build . --parallel 4 && \
+    cmake --build . --parallel $(nproc) && \
     cmake --install . && \
     cd ../../pi-build && \
     tar xf ../src/qtbase-everywhere-src-6.10.1.tar.xz && \
@@ -204,43 +207,20 @@ RUN { \
         -DQT_FEATURE_xcb=ON -DFEATURE_xcb_xlib=ON \
         -DFEATURE_sql_psql=ON \
         -DQT_FEATURE_xlib=ON && \
-    cmake --build . --parallel 4 && \
+    cmake --build . --parallel $(nproc) && \
     cmake --install . && \
     echo "Compile shader for rasp" && \
     cd ../qtshadertools-everywhere-src-6.10.1 && \
     /build/qt6/pi/bin/qt-configure-module . && \
-    cmake --build . --parallel 4 && \
+    cmake --build . --parallel $(nproc) && \
     cmake --install . && \
     echo "Compile declerative for rasp" && \
     cd ../qtdeclarative-everywhere-src-6.10.1 && \
     /build/qt6/pi/bin/qt-configure-module . && \
-    cmake --build . --parallel 4 && \
+    cmake --build . --parallel $(nproc) && \
     cmake --install . && \
     echo "Compilation is finished"; \
 } 2>&1 | tee -a /build.log
 
 RUN tar -czvf qt-host-binaries.tar.gz -C /build/qt6/host .
 RUN tar -czvf qt-pi-binaries.tar.gz -C /build/qt6/pi .
-
-# Set up project directory
-RUN mkdir /build/project
-COPY project /build/project
-
-# Build the project using Qt for Raspberry Pi
-RUN { \
-    cd /build/project && \
-    /build/qt6/pi/bin/qt-cmake . && \
-    cmake --build .; \
-} 2>&1 | tee -a /build.log
-
-# Set up QtOpencvExample directory
-RUN mkdir /build/QtOpencvExample
-COPY QtOpencvExample /build/QtOpencvExample
-
-# Build the project using Qt and Opencv for Raspberry Pi
-RUN if [ "$BUILD_OPENCV" = "ON" ]; then { \
-    cd /build/QtOpencvExample && \
-    mkdir build && cd build && \
-    cmake -DCMAKE_TOOLCHAIN_FILE=/build/QtOpencvExample/toolchain.cmake .. && \
-    make ; \
-} 2>&1 | tee -a /build.log; fi

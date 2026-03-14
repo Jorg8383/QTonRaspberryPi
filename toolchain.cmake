@@ -3,7 +3,7 @@ include_guard(GLOBAL)
 
 # Set the system name and processor for cross-compilation
 set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
 
 # Set the target sysroot and architecture
 set(TARGET_SYSROOT /build/sysroot)
@@ -21,7 +21,7 @@ set(CMAKE_CXX_COMPILER /usr/bin/${TARGET_ARCHITECTURE}-g++-14)
 
 # Define additional compiler flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -isystem=/usr/include -isystem=/usr/local/include -isystem=/usr/include/${TARGET_ARCHITECTURE}")
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem=/usr/include -isystem=/usr/local/include -isystem=/usr/include/${TARGET_ARCHITECTURE}")
 
 # Set Qt-specific compiler and linker flags
 set(QT_COMPILER_FLAGS "-march=armv8-a -mtune=generic -ftree-vectorize")

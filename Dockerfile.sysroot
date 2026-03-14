@@ -2,6 +2,9 @@
 # 32 bit os will fail for this case
 FROM arm64v8/debian:trixie
 
+# Use bash and enable pipefail so piped commands (e.g. with tee logging) fail the build correctly
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Optional: keep a build log

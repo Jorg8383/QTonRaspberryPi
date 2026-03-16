@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+BASE_IMAGE="${BASE_IMAGE:-qtcrossbuild:latest}"
 IMAGE_NAME="${IMAGE_NAME:-qt-app-image:latest}"
 CONTAINER_NAME="${CONTAINER_NAME:-qt-app-extract}"
 # Change the default project directory as required
@@ -40,8 +41,8 @@ if [[ ! -f "${ROOT_DIR}/Dockerfile.app" ]]; then
     exit 1
 fi
 
-if ! docker image inspect qtcrossbuild:latest >/dev/null 2>&1; then
-    echo "Error: base image qtcrossbuild:latest not found."
+if ! docker image inspect "${BASE_IMAGE}" >/dev/null 2>&1; then
+    echo "Error: base image ${BASE_IMAGE} not found."
     echo "Run build-sdk-image.sh first."
     exit 1
 fi
@@ -52,7 +53,7 @@ if [[ ! -d "${ROOT_DIR}/${APP_DIR}" ]]; then
 fi
 
 # ------------------------------------------------------------
-# Build app image and extract binaries
+# Build app image and extract application/runtime artifacts
 # ------------------------------------------------------------
 
 mkdir -p "${HOST_OUTPUT_DIR}"
@@ -60,6 +61,7 @@ mkdir -p "${HOST_OUTPUT_DIR}"
 echo "==> Building app image: ${IMAGE_NAME}"
 echo "==> APP_DIR=${APP_DIR}"
 echo "==> BUILD_TYPE=${BUILD_TYPE}"
+echo "==> APP_BINARY_NAME=${APP_BINARY_NAME}"
 
 docker build \
   -f "${ROOT_DIR}/Dockerfile.app" \
@@ -82,7 +84,14 @@ if ! docker cp "${CONTAINER_NAME}:${QT_PI_BINARY_PATH}${QT_PI_OPENCV_BINARY_NAME
     echo "==> OpenCV binaries not found, skipping"
 fi
 
-# Remove container and image as it isn't needed anymore
+# ------------------------------------------------------------
+# Clean up to save disk space
+# ------------------------------------------------------------
+
+echo "==> Removing temporary container"
 docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
 
-echo "==> Cross-compilation completed!"
+echo "==> Removing temporary app image"
+docker rmi "${IMAGE_NAME}" >/dev/null 2>&1 || true
+
+echo "==> Done. Binary available at: ${HOST_OUTPUT_DIR}/${APP_BINARY_NAME}"

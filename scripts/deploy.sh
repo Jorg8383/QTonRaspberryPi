@@ -12,10 +12,10 @@ PI_PORT="${PI_PORT:-22}"
 SSH_TARGET="${PI_USER}@${PI_HOST}"
 SSH_OPTS=(-p "${PI_PORT}")
 
-QT_TARBALL="${QT_TARBALL:-./qt-pi-binaries.tar.gz}"
+QT_TARBALL="${QT_TARBALL:-./../artifacts/qt-pi-binaries.tar.gz}"
 
 # Change the app name as required
-APP_LOCAL_PATH="${APP_LOCAL_PATH:-./HelloQt6}"
+APP_LOCAL_PATH="${APP_LOCAL_PATH:-./../artifacts/HelloQt6}"
 
 QT_INSTALL_DIR="${QT_INSTALL_DIR:-/usr/local/qt6}"
 APP_REMOTE_DIR="${APP_REMOTE_DIR:-/home/${PI_USER}/app}"

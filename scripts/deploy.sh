@@ -11,6 +11,7 @@ PI_PORT="${PI_PORT:-22}"
 
 SSH_TARGET="${PI_USER}@${PI_HOST}"
 SSH_OPTS=(-p "${PI_PORT}")
+SCP_OPTS=(-P "${PI_PORT}")
 
 QT_TARBALL="${QT_TARBALL:-./../artifacts/qt-pi-binaries.tar.gz}"
 
@@ -56,13 +57,13 @@ require_file "${REMOTE_SETUP_SCRIPT}"
 # ------------------------------------------------------------
 
 echo "==> Copying Qt tarball to target"
-scp "${SSH_OPTS[@]}" "${QT_TARBALL}" "${SSH_TARGET}:/home/${PI_USER}/"
+scp "${SCP_OPTS[@]}" "${QT_TARBALL}" "${SSH_TARGET}:/home/${PI_USER}/"
 
 echo "==> Copying app binary to target"
-scp "${SSH_OPTS[@]}" "${APP_LOCAL_PATH}" "${SSH_TARGET}:/home/${PI_USER}/"
+scp "${SCP_OPTS[@]}" "${APP_LOCAL_PATH}" "${SSH_TARGET}:/home/${PI_USER}/"
 
 echo "==> Copying remote setup script to target"
-scp "${SSH_OPTS[@]}" "${REMOTE_SETUP_SCRIPT}" "${SSH_TARGET}:${REMOTE_SETUP_PATH}"
+scp "${SCP_OPTS[@]}" "${REMOTE_SETUP_SCRIPT}" "${SSH_TARGET}:${REMOTE_SETUP_PATH}"
 
 # ------------------------------------------------------------
 # Remote setup
